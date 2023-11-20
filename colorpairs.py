@@ -19,23 +19,18 @@ class ColorspaceScanner:
         list(product([0], range(0, 128), range(128, 256))))
     blues_no_green = np.array(
         list(product(range(0, 128), [0], range(128, 256))))
-    no_blues = np.array(list(product(range(0, 256), range(0, 256), [0])))
-    no_reds = np.array(list(product([0], range(0, 256), range(0, 256))))
-    no_greens = np.array(list(product(range(0, 256), [0], range(0, 256))))
     
     
     def __init__(self, color_vision_deficency, threshold=0):
         self.color_vision_deficency = color_vision_deficency
         self.threshold = threshold
 
-        self.matching_pairs = {'red': [], 'green': [], 'blue': [], 'red-green': [], 'red-blue': [], 'green-blue': []}
+        self.matching_pairs = {'red': [], 'green': [], 'blue': [], 'red-green': []}
         self.grid = {
             'red': product(self.reds_no_green, self.reds_no_blue),
             'green': product(self.greens_no_blue, self.greens_no_red),
             'blue': product(self.blues_no_red, self.blues_no_green),
-            'red-green': product(self.no_blues, self.no_reds),
-            'red-blue': product(self.no_greens, self.no_reds),
-            'green-blue': product(self.no_reds, self.no_greens)
+            'red-green': product(self.reds_no_blue, self.greens_no_blue)
         }
 
         self.transformation_matrix = colour.blindness.matrix_cvd_Machado2009(self.color_vision_deficency, 1)
@@ -53,7 +48,7 @@ class ColorspaceScanner:
     def scan_grid_for_matching_pairs(self, color):
 
         print(f'{self.color_vision_deficency}_{color}')
-        for color_pair in tqdm(self.grid[color], total=256**4):
+        for color_pair in tqdm(self.grid[color], total=128**4):
             color1, color2 = color_pair
             transformed_color1 = np.rint(self.transformation_matrix @ color1).astype(int).clip(0, 255)
             transformed_color2 = np.rint(self.transformation_matrix @ color2).astype(int).clip(0, 255)
