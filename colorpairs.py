@@ -79,8 +79,8 @@ def main():
     scanner = ColorspaceScanner('Deuteranomaly')
     scanner.scan_colorspace()
 
-    scanner = ColorspaceScanner('Tritanomaly')
-    scanner.scan_colorspace()
+    # scanner = ColorspaceScanner('Tritanomaly')
+    # scanner.scan_colorspace()
 
 
 if __name__ == '__main__':
