@@ -25,12 +25,11 @@ class ColorspaceScanner:
         self.color_vision_deficency = color_vision_deficency
         self.threshold = threshold
 
-        self.matching_pairs = {'red': [], 'green': [], 'blue': [], 'red-green': []}
+        self.matching_pairs = {'red': [], 'green': [], 'blue': []}
         self.grid = {
             'red': product(self.reds_no_green, self.reds_no_blue),
             'green': product(self.greens_no_blue, self.greens_no_red),
-            'blue': product(self.blues_no_red, self.blues_no_green),
-            'red-green': product(self.reds_no_blue, self.greens_no_blue)
+            'blue': product(self.blues_no_red, self.blues_no_green)
         }
 
         self.transformation_matrix = colour.blindness.matrix_cvd_Machado2009(self.color_vision_deficency, 1)
@@ -44,14 +43,18 @@ class ColorspaceScanner:
                             'transformed_color2', 'distance', 'transformed_distance'])
             writer.writerows(self.matching_pairs[color])
 
+    def is_within_space(self, color):
+        return np.all(color >= 0) and np.all(color <= 255)
 
     def scan_grid_for_matching_pairs(self, color):
 
         print(f'{self.color_vision_deficency}_{color}')
         for color_pair in tqdm(self.grid[color], total=128**4):
             color1, color2 = color_pair
-            transformed_color1 = np.rint(self.transformation_matrix @ color1).astype(int).clip(0, 255)
-            transformed_color2 = np.rint(self.transformation_matrix @ color2).astype(int).clip(0, 255)
+            transformed_color1 = np.rint(self.transformation_matrix @ color1).astype(int)
+            transformed_color2 = np.rint(self.transformation_matrix @ color2).astype(int)
+            if not self.is_within_space(transformed_color1) or not self.is_within_space(transformed_color2):
+                continue
 
             distance = np.linalg.norm(color1 - color2)
             transformed_distance = np.linalg.norm(
@@ -63,18 +66,15 @@ class ColorspaceScanner:
         self.save_matching_pairs(color)
 
     def scan_colorspace(self):
-        # self.scan_grid_for_matching_pairs('red')
+        self.scan_grid_for_matching_pairs('red')
         # self.scan_grid_for_matching_pairs('green')
         # self.scan_grid_for_matching_pairs('blue')
-        self.scan_grid_for_matching_pairs('red-green')
-        # self.scan_grid_for_matching_pairs('red-blue')
-        # self.scan_grid_for_matching_pairs('green-blue')
 
 
 def main():
 
-    scanner = ColorspaceScanner('Protanomaly')
-    scanner.scan_colorspace()
+    # scanner = ColorspaceScanner('Protanomaly')
+    # scanner.scan_colorspace()
 
     scanner = ColorspaceScanner('Deuteranomaly')
     scanner.scan_colorspace()
